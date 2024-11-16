@@ -1,129 +1,123 @@
 import pygame
-import numpy as np
-from pygame.locals import QUIT, KEYDOWN, K_ESCAPE
-
-
-# Constants
-WIDTH, HEIGHT = 800, 800  # Screen dimensions
-EARTH_RADIUS = 300  # Earth radius in pixels
-EARTH_ROTATION_SPEED = 0.05  # Earth rotation speed in radians per frame
-HURRICANE_ROTATION_SPEED = 2  # Hurricane rotation speed in degrees per frame
-FPS = 60  # Frames per second
-SOUTHERN_HEMISPHERE = "Southern"
-NORTHERN_HEMISPHERE = "Northern"
-
+import math
+import sys
+from pygame import gfxdraw
 
 # Initialize Pygame
 pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Hurricane Simulation")
-clock = pygame.time.Clock()
 
+# Constants
+WIDTH = 800
+HEIGHT = 800
+RADIUS = 300
+CENTER = (WIDTH // 2, HEIGHT // 2)
+ROTATION_SPEED = 0.5  # degrees per frame
+PARTICLE_SPEED = 2
 
 # Colors
-BLACK = (0, 0, 0)
-BLUE = (0, 0, 255)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
 WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
+RED = (255, 0, 0)
+BLACK = (0, 0, 0)
+GRAY = (128, 128, 128)
 
+# Set up display
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Southern Hemisphere Coriolis Effect Simulator")
 
-# User Inputs
-hemisphere = input("Enter hemisphere (Northern or Southern): ").strip()
-latitude = float(input("Enter latitude in radians (0 to π/2 for N, -π/2 to 0 for S): "))
-hurricane_radius = int(input("Enter hurricane radius in kilometers: ")) * 1e3
+class Particle:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.initial_x = x - CENTER[0]
+        self.initial_y = y - CENTER[1]
+        self.angle = 0
+        self.trail = []
+        self.velocity = [0, PARTICLE_SPEED]  # Initial velocity (moving straight down)
+        
+    def update(self, rotation_angle):
+        # Store current position in trail
+        self.trail.append((self.x, self.y))
+        if len(self.trail) > 100:  # Limit trail length
+            self.trail.pop(0)
+            
+        # Calculate Coriolis effect
+        # In Southern Hemisphere, deflection is to the left
+        angular_velocity = math.radians(ROTATION_SPEED)
+        coriolis_acceleration_x = 2 * angular_velocity * self.velocity[1]
+        coriolis_acceleration_y = -2 * angular_velocity * self.velocity[0]
+        
+        # Update velocity with Coriolis effect
+        self.velocity[0] += coriolis_acceleration_x
+        self.velocity[1] += coriolis_acceleration_y
+        
+        # Update position
+        self.x += self.velocity[0]
+        self.y += self.velocity[1]
+        
+        # Check if particle is outside the circle
+        dx = self.x - CENTER[0]
+        dy = self.y - CENTER[1]
+        if math.sqrt(dx*dx + dy*dy) > RADIUS:
+            return True
+        return False
 
+def draw_grid(surface, angle):
+    # Draw latitude lines
+    for i in range(30, RADIUS, 60):
+        pygame.draw.circle(surface, GRAY, CENTER, i, 1)
+    
+    # Draw longitude lines
+    for i in range(12):
+        rot_angle = math.radians(i * 30 + angle)
+        end_x = CENTER[0] + RADIUS * math.cos(rot_angle)
+        end_y = CENTER[1] + RADIUS * math.sin(rot_angle)
+        pygame.draw.line(surface, GRAY, CENTER, (end_x, end_y), 1)
 
-# Hurricane Initial Position and Velocity
-lon = 0  # Longitude in radians
-velocity = np.array([0.0, 200.0])  # Initial velocity (latitudinal, longitudinal) in m/s
-rotation_angle = 0  # Rotation angle for hurricane texture
-path_points = []  # To store the trajectory
+def main():
+    clock = pygame.time.Clock()
+    rotation_angle = 0
+    particle = None
+    running = True
+    
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # Create new particle at mouse click position
+                x, y = pygame.mouse.get_pos()
+                dx = x - CENTER[0]
+                dy = y - CENTER[1]
+                # Only create particle if click is inside the circle
+                if math.sqrt(dx*dx + dy*dy) <= RADIUS:
+                    particle = Particle(x, y)
+        
+        screen.fill(BLACK)
+        
+        # Draw rotating Earth (Southern Hemisphere)
+        pygame.draw.circle(screen, BLUE, CENTER, RADIUS)
+        draw_grid(screen, rotation_angle)
+        
+        # Update rotation
+        rotation_angle += ROTATION_SPEED
+        
+        # Update and draw particle
+        if particle:
+            if particle.update(rotation_angle):
+                particle = None  # Reset particle if it goes outside the circle
+            else:
+                # Draw trail
+                if len(particle.trail) > 1:
+                    pygame.draw.lines(screen, RED, False, particle.trail, 2)
+                # Draw particle
+                pygame.draw.circle(screen, RED, (int(particle.x), int(particle.y)), 5)
+        
+        pygame.display.flip()
+        clock.tick(60)
 
+    pygame.quit()
+    sys.exit()
 
-# Scaling for visualization
-VISUAL_SCALE = EARTH_RADIUS / (6371e3)  # Convert kilometers to pixels
-hurricane_radius_pixels = int(hurricane_radius * VISUAL_SCALE)
-
-
-# Functions
-def calculate_coriolis(lat, velocity):
-    """Calculate the Coriolis force based on latitude and velocity."""
-    coriolis_strength = 2 * 7.2921e-5 * velocity[1] * np.sin(lat)
-    return np.array([0, coriolis_strength])
-
-
-
-
-def update_hurricane_position(lat, lon, velocity, coriolis, time_step):
-    """Update the hurricane's position based on velocity, Coriolis force, and Earth's rotation."""
-    velocity += coriolis * time_step
-    d_lat = velocity[0] * time_step / (EARTH_RADIUS / VISUAL_SCALE)
-    d_lon = velocity[1] * time_step / (EARTH_RADIUS / VISUAL_SCALE * np.cos(lat))
-    lat += d_lat
-    lon = (lon + d_lon + EARTH_ROTATION_SPEED * time_step) % (2 * np.pi)
-    return lat, lon, velocity
-
-
-
-
-def lat_lon_to_screen(lat, lon):
-    """Convert latitude and longitude to screen coordinates."""
-    x = WIDTH // 2 + EARTH_RADIUS * np.cos(lat) * np.cos(lon)
-    y = HEIGHT // 2 + EARTH_RADIUS * np.cos(lat) * np.sin(lon)
-    return int(x), int(y)
-
-
-
-
-# Main Game Loop
-running = True
-earth_rotation = 0  # Angle of Earth rotation
-while running:
-    for event in pygame.event.get():
-        if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
-            running = False
-
-
-    # Clear screen
-    screen.fill(BLACK)
-
-
-    # Update Earth rotation
-    earth_rotation = (earth_rotation + EARTH_ROTATION_SPEED) % (2 * np.pi)
-
-
-    # Draw Earth
-    pygame.draw.circle(screen, BLUE, (WIDTH // 2, HEIGHT // 2), EARTH_RADIUS, 1)
-
-
-    # Update Hurricane Position
-    coriolis = calculate_coriolis(latitude, velocity)
-    latitude, lon, velocity = update_hurricane_position(latitude, lon, velocity, coriolis, 1 / FPS)
-
-
-    # Get Hurricane Screen Coordinates
-    hurricane_x, hurricane_y = lat_lon_to_screen(latitude, lon)
-
-
-    # Draw Hurricane Path
-    path_points.append((hurricane_x, hurricane_y))
-    if len(path_points) > 1:
-        pygame.draw.lines(screen, GREEN, False, path_points, 2)
-
-
-    # Draw Hurricane
-    pygame.draw.circle(screen, RED, (hurricane_x, hurricane_y), hurricane_radius_pixels, 0)
-
-
-    # Rotate and Draw Hurricane Texture
-    rotation_angle += HURRICANE_ROTATION_SPEED if hemisphere == NORTHERN_HEMISPHERE else -HURRICANE_ROTATION_SPEED
-    pygame.draw.circle(screen, WHITE, (hurricane_x, hurricane_y), hurricane_radius_pixels // 2, 0)
-
-
-    # Update Display
-    pygame.display.flip()
-    clock.tick(FPS)
-
-
-pygame.quit()
+if __name__ == "__main__":
+    main()
