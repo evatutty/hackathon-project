@@ -31,7 +31,7 @@ hurricane_radius = int(input("Enter hurricane radius in kilometers: ")) * 1e3
 
 # Hurricane Initial Position and Velocity
 lon = 0  # Longitude in radians
-velocity = np.array([0, 200])  # Initial velocity (latitudinal, longitudinal) in m/s
+velocity = np.array([0.0, 200.0])  # Initial velocity (latitudinal, longitudinal) in m/s
 rotation_angle = 0  # Rotation angle for hurricane texture
 path_points = []  # To store the trajectory
 
