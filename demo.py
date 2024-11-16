@@ -1,10 +1,9 @@
 import pygame
-import sys
+import numpy as np
+from pygame.locals import QUIT, KEYDOWN, K_ESCAPE
 
-# Initialize Pygame
-pygame.init()
-
-# Screen dimensions
-WIDTH, HEIGHT = 800, 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Hurricane Simulator")
+WIDTH, HEIGHT = 800, 800
+EARTH_RADIUS = 6371e3
+HURRICANE_ROTATION_SPEED = 5
+VISUAL_SCALE = 1e-5
+HURRICANE_INITIAL_RADIUS = 
