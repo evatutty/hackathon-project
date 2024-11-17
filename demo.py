@@ -165,19 +165,18 @@ def main():
                 y=int(particle.y)
                 #displaying latitude
                 font = pygame.font.Font(None,25)
-                text=font.render(f'Y Position: {y}',True, WHITE, BLACK)
-                textRect=text.get_rect()
-                textRect.center=(100,700)
-                screen.blit(text,textRect)
-                text2=font.render(f'X position: {x}',True, WHITE, BLACK)
-                textRect2=text2.get_rect()
-                textRect2.center=(100,650)
-                screen.blit(text2,textRect2)
-                font = pygame.font.Font(None,25)
                 text3=font.render('Use arrows to change velocity',True, WHITE, BLACK)
                 textRect3=text3.get_rect()
                 textRect3.center=(150,750)
                 screen.blit(text3,textRect3)
+                
+                
+                distance =math.sqrt(((particle.x - (WIDTH//2))**2) + ((particle.y - (HEIGHT//2))**2))
+                font = pygame.font.Font(None,25)
+                text4=font.render(f'Distance from pole: {distance:.2f}', True, WHITE, BLACK)
+                textRect4=text4.get_rect()
+                textRect4.center=(150,700)
+                screen.blit(text4,textRect4)
 
 
                 pygame.display.update()
