@@ -171,6 +171,7 @@ def main():
                 if len(particle.trail) > 1:
                     pygame.draw.lines(screen, RED, False, particle.trail, 2)
                 pygame.draw.circle(screen, RED, (int(particle.x), int(particle.y)), 5)
+<<<<<<< HEAD
                 x = int(particle.x)
                 y = int(particle.y)
                 
@@ -190,6 +191,28 @@ def main():
                 textRect3 = text3.get_rect()
                 textRect3.center = (150, 750)
                 screen.blit(text3, textRect3)
+=======
+                x=int(particle.x)
+                y=int(particle.y)
+                #displaying latitude
+                font = pygame.font.Font(None,25)
+                text3=font.render('Use arrows to change velocity',True, WHITE, BLACK)
+                textRect3=text3.get_rect()
+                textRect3.center=(150,750)
+                screen.blit(text3,textRect3)
+                
+                
+                distance =math.sqrt(((particle.x - (WIDTH//2))**2) + ((particle.y - (HEIGHT//2))**2))
+                font = pygame.font.Font(None,25)
+                text4=font.render(f'Distance from pole: {distance:.2f}', True, WHITE, BLACK)
+                textRect4=text4.get_rect()
+                textRect4.center=(150,700)
+                screen.blit(text4,textRect4)
+
+
+                pygame.display.update()
+            
+>>>>>>> b15626cd68e3a66f713a1e5d9fa08f7f0023f7c9
         
         # Update display
         pygame.display.flip()
