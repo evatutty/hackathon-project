@@ -79,7 +79,7 @@ def create_stars(num_stars=200):
     stars = []
     for _ in range(num_stars):
         x = random.randint(0, 800)  # Random x position
-        y = random.randint(0, 600)  # Random y position
+        y = random.randint(0, 800)  # Random y position
         stars.append((x, y))  # Store the (x, y) coordinates of each star
     return stars
 
