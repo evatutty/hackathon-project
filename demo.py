@@ -95,7 +95,7 @@ def draw_grid(surface, angle):
     for radius in latitude_positions:
         # Draw equator (first latitude line) thicker and in yellow
         if radius == latitude_positions[0]:  # The equator is the outermost circle
-            pygame.draw.circle(surface, YELLOW, CENTER, radius, 100)  # Thicker line for equator
+            pygame.draw.circle(surface, RED, CENTER, radius, 100)  # Thicker line for equator
         else:
             pygame.draw.circle(surface, GRAY, CENTER, radius, 1)
     
@@ -119,7 +119,7 @@ def draw_grid(surface, angle):
     south_pole_text = south_pole_font.render('South Pole', True, (255, 255, 255))  # White text color
     south_pole_rect = south_pole_text.get_rect(center=(400, 390))  
 
-    title_text = title_font.render('Southern Hemisphere', True, (200,40,10))
+    title_text = title_font.render('Southern Hemisphere', True, (200,40,10), BLACK)
     title_rect = title_text.get_rect(center=(400,50))
 
 # In your game loop or wherever appropriate, draw the texts
