@@ -44,23 +44,25 @@ class Particle:
             self.trail.pop(0)
             
         # Calculate Coriolis effect
-        # In Southern Hemisphere, deflection is to the left
+        # Angular velocity in radians (Earth's rotation speed in radians per frame)
         angular_velocity = math.radians(ROTATION_SPEED)
-        coriolis_acceleration_x = 2 * angular_velocity * self.velocity[1]
-        coriolis_acceleration_y = -2 * angular_velocity * self.velocity[0]
+        
+        # Coriolis accelerations in x and y directions:
+        coriolis_acceleration_x = 2 * angular_velocity * self.velocity[1]  # Based on vertical velocity
+        coriolis_acceleration_y = -2 * angular_velocity * self.velocity[0]  # Based on horizontal velocity
         
         # Update velocity with Coriolis effect
-        self.velocity[0] += coriolis_acceleration_x
-        self.velocity[1] += coriolis_acceleration_y
+        self.velocity[0] += coriolis_acceleration_x  # Horizontal velocity change
+        self.velocity[1] += coriolis_acceleration_y  # Vertical velocity change
         
         # Update position
-        self.x += self.velocity[0]
-        self.y += self.velocity[1]
+        self.x += self.velocity[0]  # Update x position with horizontal velocity
+        self.y += self.velocity[1]  # Update y position with vertical velocity
         
         # Check if particle is outside the circle
         dx = self.x - CENTER[0]
         dy = self.y - CENTER[1]
-        if math.sqrt(dx*dx + dy*dy) > RADIUS:
+        if math.sqrt(dx * dx + dy * dy) > RADIUS:
             return True
         return False
 
