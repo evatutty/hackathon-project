@@ -1,18 +1,23 @@
 import pygame
 import math
 import sys
-from pygame import gfxdraw
+import random
 
 # Initialize Pygame
 pygame.init()
 
-# Constants
+# Window Settings
 WIDTH = 800
 HEIGHT = 800
-RADIUS = 300
-CENTER = (WIDTH // 2, HEIGHT // 2)
-ROTATION_SPEED = 0.5  # degrees per frame
-PARTICLE_SPEED = 2
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Southern Hemisphere Coriolis Effect Simulator")
+
+# Simulation Settings
+RADIUS = 300  # Earth radius in pixels
+CENTER = (WIDTH // 2, HEIGHT // 2)  # Center of the screen
+ROTATION_SPEED = 0.5  # How fast the Earth rotates (degrees per frame)
+PARTICLE_SPEED = 2  # Initial particle speed
+VELOCITY_CHANGE = 0.2  # How much arrow keys change velocity
 
 # Colors
 WHITE = (255, 255, 255)
@@ -20,189 +25,162 @@ BLUE = (0, 0, 255)
 RED = (255, 0, 0)
 BLACK = (0, 0, 0)
 GRAY = (128, 128, 128)
-YELLOW = (255, 255, 0)  # For the equator
-POLE_COLOR = (255, 255, 255)  # White for the pole marker
+TITLE_COLOR = (200, 40, 10)
 
-# Set up display
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Coriolis Effect Simulator")
+def create_stars():
+    """Create a list of random star positions"""
+    return [(random.randint(0, WIDTH), random.randint(0, HEIGHT)) 
+            for _ in range(200)]
+
+def draw_stars(screen, stars):
+    """Draw all stars as small white circles"""
+    for position in stars:
+        pygame.draw.circle(screen, WHITE, position, 2)
 
 class Particle:
+    """Represents a particle affected by the Coriolis effect"""
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.initial_x = x - CENTER[0]
-        self.initial_y = y - CENTER[1]
-        self.angle = 0
-        self.trail = []
-        self.velocity = [0, PARTICLE_SPEED]  # Initial velocity (moving straight down)
+        self.velocity = [0, PARTICLE_SPEED]  # [x_speed, y_speed]
+        self.trail = []  # Stores previous positions
         
     def update(self, rotation_angle):
-        # Store current position in trail
+        # Save current position for trail
         self.trail.append((self.x, self.y))
         if len(self.trail) > 100:  # Limit trail length
             self.trail.pop(0)
             
-        # Calculate Coriolis effect
-        # Angular velocity in radians (Earth's rotation speed in radians per frame)
+        # Calculate Coriolis effect (Southern Hemisphere: deflection to the left)
         angular_velocity = math.radians(ROTATION_SPEED)
+        coriolis_x = 2 * angular_velocity * self.velocity[1]
+        coriolis_y = -2 * angular_velocity * self.velocity[0]
         
-        # Coriolis accelerations in x and y directions:
-        coriolis_acceleration_x = 2 * angular_velocity * self.velocity[1]  # Based on vertical velocity
-        coriolis_acceleration_y = -2 * angular_velocity * self.velocity[0]  # Based on horizontal velocity
+        # Update velocity and position
+        self.velocity[0] += coriolis_x
+        self.velocity[1] += coriolis_y
+        self.x += self.velocity[0]
+        self.y += self.velocity[1]
         
-        # Update velocity with Coriolis effect
-        self.velocity[0] += coriolis_acceleration_x  # Horizontal velocity change
-        self.velocity[1] += coriolis_acceleration_y  # Vertical velocity change
-        
-        # Update position
-        self.x += self.velocity[0]  # Update x position with horizontal velocity
-        self.y += self.velocity[1]  # Update y position with vertical velocity
-        
-        # Check if particle is outside the circle
+        # Check if particle is outside the Earth
         dx = self.x - CENTER[0]
         dy = self.y - CENTER[1]
-        if math.sqrt(dx * dx + dy * dy) > RADIUS:
-            return True
-        return False
+        return math.sqrt(dx*dx + dy*dy) > RADIUS
 
-def get_latitude_positions(num_lines=10):
-    """Calculate latitude line positions with perspective effect"""
-    positions = []
-    for i in range(num_lines):
-        # Use inverse cosine function to create perspective effect
-        angle = (i / (num_lines - 1)) * math.pi / 2
-        distance = RADIUS * math.sin(angle)
-        positions.append(int(distance))
-    return positions
+    def adjust_velocity(self, dx, dy):
+        """Change particle velocity using arrow keys"""
+        self.velocity[0] += dx
+        self.velocity[1] += dy
 
-def create_stars(num_stars=200):
-    import random
-    stars = []
-    for _ in range(num_stars):
-        x = random.randint(0, 800)  # Random x position
-        y = random.randint(0, 800)  # Random y position
-        stars.append((x, y))  # Store the (x, y) coordinates of each star
-    return stars
-
-def draw_stars(screen, stars):
-    for (x, y) in stars:
-        pygame.draw.circle(screen, (255, 255, 255), (x, y), 2)
-
-def draw_grid(surface, angle):
-    # Draw latitude lines with perspective effect
-    latitude_positions = get_latitude_positions()
-    for radius in latitude_positions:
-        # Draw equator (first latitude line) thicker and in yellow
-        if radius == latitude_positions[0]:  # The equator is the outermost circle
-            pygame.draw.circle(surface, RED, CENTER, radius, 100)  # Thicker line for equator
-        else:
-            pygame.draw.circle(surface, GRAY, CENTER, radius, 1)
+def draw_earth_grid(surface, angle):
+    """Draw the Earth with grid lines, labels, and markers"""
+    # Draw main Earth circle
+    pygame.draw.circle(surface, BLUE, CENTER, RADIUS)
     
-    # Draw longitude lines with varying spacing
-    num_lines = 24  # Increase number of longitude lines
-    for i in range(num_lines):
-        rot_angle = math.radians(i * (360 / num_lines) + angle)
-        end_x = CENTER[0] + RADIUS * math.cos(rot_angle)
-        end_y = CENTER[1] + RADIUS * math.sin(rot_angle)
+    # Draw latitude circles
+    latitudes = [RADIUS, int(RADIUS * 0.8), int(RADIUS * 0.6), 
+                int(RADIUS * 0.4), int(RADIUS * 0.2)]
+    
+    for radius in latitudes:
+        color = RED if radius == RADIUS else GRAY  # Equator in red
+        thickness = 3 if radius == RADIUS else 1  # Equator thicker
+        pygame.draw.circle(surface, color, CENTER, radius, thickness)
+    
+    # Draw longitude lines
+    for i in range(24):  # 24 longitude lines
+        angle_rad = math.radians(i * 15 + angle)  # 360/24 = 15 degrees
+        end_x = CENTER[0] + RADIUS * math.cos(angle_rad)
+        end_y = CENTER[1] + RADIUS * math.sin(angle_rad)
         pygame.draw.line(surface, GRAY, CENTER, (end_x, end_y), 1)
-  # Set up the fonts with different sizes
-    equator_font = pygame.font.Font(None, 50)  # Font size for Equator
-    south_pole_font = pygame.font.Font(None, 20)  # Font size for South Pole
-    title_font = pygame.font.Font(None,80) #Font size for the title
+    
+    # Draw labels
+    title_font = pygame.font.Font(None, 80)
+    label_font = pygame.font.Font(None, 50)
+    small_font = pygame.font.Font(None, 20)
+    
+    # Draw title
+    title = title_font.render('Southern Hemisphere', True, TITLE_COLOR, BLACK)
+    screen.blit(title, title.get_rect(center=(400, 50)))
+    
+    # Draw "Equator" label
+    equator = label_font.render('Equator', True, RED)
+    screen.blit(equator, equator.get_rect(center=(600, 700)))
+    
+    # Draw "South Pole" label and marker
+    pole = small_font.render('South Pole', True, WHITE)
+    screen.blit(pole, pole.get_rect(center=(400, 390)))
+    pygame.draw.circle(surface, WHITE, CENTER, 5)  # Pole dot
+    pygame.draw.circle(surface, BLACK, CENTER, 5, 1)  # Pole outline
 
-# Render the text for "Equator"
-    equator_text = equator_font.render('Equator', True, (255, 0, 0))  # White text color
-    equator_rect = equator_text.get_rect(center=(600, 700))  
-
-# Render the text for "South Pole"
-    south_pole_text = south_pole_font.render('South Pole', True, (255, 255, 255))  # White text color
-    south_pole_rect = south_pole_text.get_rect(center=(400, 390))  
-
-    title_text = title_font.render('Southern Hemisphere', True, (200,40,10), BLACK)
-    title_rect = title_text.get_rect(center=(400,50))
-
-# In your game loop or wherever appropriate, draw the texts
-    screen.blit(equator_text, equator_rect)  # Draw Equator text
-    screen.blit(south_pole_text, south_pole_rect)
-    screen.blit(title_text,title_rect)
-
-# In your game loop or wherever appropriate, draw the texts
-    screen.blit(equator_text, equator_rect)  # Draw Equator text
-    screen.blit(south_pole_text, south_pole_rect)  # Draw South Pole text)
-    # Draw South Pole marker
-    pygame.draw.circle(surface, POLE_COLOR, CENTER, 5)  # White dot for South Pole
-    # Add a small black outline to make the pole more visible
-    pygame.draw.circle(surface, BLACK, CENTER, 5, 1)
+def draw_velocity_info(surface, particle):
+    """Draw particle velocity and controls info at bottom-left"""
+    if particle:
+        font = pygame.font.Font(None, 36)
+        # Show current velocity
+        vel_text = f"Velocity: ({particle.velocity[0]:.1f}, {particle.velocity[1]:.1f})"
+        vel_surface = font.render(vel_text, True, WHITE)
+        surface.blit(vel_surface, (10, HEIGHT - 80))
+        
+        # Show controls
+        ctrl_text = "Use arrow keys to adjust velocity"
+        ctrl_surface = font.render(ctrl_text, True, WHITE)
+        surface.blit(ctrl_surface, (10, HEIGHT - 40))
 
 def main():
     clock = pygame.time.Clock()
+    stars = create_stars()
     rotation_angle = 0
     particle = None
     running = True
-    stars = create_stars(num_stars=200)
     
     while running:
+        # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                # Create new particle at mouse click position
+                # Create new particle on click if inside Earth
                 x, y = pygame.mouse.get_pos()
                 dx = x - CENTER[0]
                 dy = y - CENTER[1]
-                # Only create particle if click is inside the circle
                 if math.sqrt(dx*dx + dy*dy) <= RADIUS:
                     particle = Particle(x, y)
         
+        # Handle keyboard input
+        if particle:
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LEFT]: particle.adjust_velocity(-VELOCITY_CHANGE, 0)
+            if keys[pygame.K_RIGHT]: particle.adjust_velocity(VELOCITY_CHANGE, 0)
+            if keys[pygame.K_UP]: particle.adjust_velocity(0, -VELOCITY_CHANGE)
+            if keys[pygame.K_DOWN]: particle.adjust_velocity(0, VELOCITY_CHANGE)
+        
+        # Clear screen and draw background
         screen.fill(BLACK)
         draw_stars(screen, stars)
-        # Draw rotating Earth (Southern Hemisphere)
-        pygame.draw.circle(screen, BLUE, CENTER, RADIUS)
-        draw_grid(screen, rotation_angle)
         
-        
-        # Update rotation
+        # Draw Earth and grid
+        draw_earth_grid(screen, rotation_angle)
         rotation_angle += ROTATION_SPEED
         
         # Update and draw particle
         if particle:
             if particle.update(rotation_angle):
-                particle = None  # Reset particle if it goes outside the circle
+                particle = None  # Reset if outside Earth
             else:
-                # Draw trail
+                # Draw trail and particle
                 if len(particle.trail) > 1:
                     pygame.draw.lines(screen, RED, False, particle.trail, 2)
-                # Draw particle
                 pygame.draw.circle(screen, RED, (int(particle.x), int(particle.y)), 5)
-                x=int(particle.x)
-                y=int(particle.y)
-                #displaying latitude
-                font = pygame.font.Font(None,25)
-                text=font.render(f'Y Position: {y}',True, WHITE, BLACK)
-                textRect=text.get_rect()
-                textRect.center=(100,750)
-                screen.blit(text,textRect)
-                text2=font.render(f'X position: {x}',True, WHITE, BLACK)
-                textRect2=text2.get_rect()
-                textRect2.center=(100,700)
-                screen.blit(text2,textRect2)
-
-                pygame.display.update()
-
-
-    
-
-
-
-
+        
+        # Draw velocity information
+        draw_velocity_info(screen, particle)
+        
+        # Update display
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(60)  # 60 FPS
 
     pygame.quit()
     sys.exit()
 
 if __name__ == "__main__":
     main()
-
-
