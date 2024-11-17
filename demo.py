@@ -10,7 +10,7 @@ pygame.init()
 WIDTH = 800
 HEIGHT = 800
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Southern Hemisphere Coriolis Effect Simulator")
+pygame.display.set_caption("Coriolis Effect Simulator")
 
 # Simulation Settings
 RADIUS = 300  # Earth radius in pixels
@@ -112,19 +112,7 @@ def draw_earth_grid(surface, angle):
     pygame.draw.circle(surface, WHITE, CENTER, 5)  # Pole dot
     pygame.draw.circle(surface, BLACK, CENTER, 5, 1)  # Pole outline
 
-def draw_velocity_info(surface, particle):
-    """Draw particle velocity and controls info at bottom-left"""
-    if particle:
-        font = pygame.font.Font(None, 36)
-        # Show current velocity
-        vel_text = f"Velocity: ({particle.velocity[0]:.1f}, {particle.velocity[1]:.1f})"
-        vel_surface = font.render(vel_text, True, WHITE)
-        surface.blit(vel_surface, (10, HEIGHT - 80))
-        
-        # Show controls
-        ctrl_text = "Use arrow keys to adjust velocity"
-        ctrl_surface = font.render(ctrl_text, True, WHITE)
-        surface.blit(ctrl_surface, (10, HEIGHT - 40))
+
 
 def main():
     clock = pygame.time.Clock()
@@ -153,6 +141,8 @@ def main():
             if keys[pygame.K_RIGHT]: particle.adjust_velocity(VELOCITY_CHANGE, 0)
             if keys[pygame.K_UP]: particle.adjust_velocity(0, -VELOCITY_CHANGE)
             if keys[pygame.K_DOWN]: particle.adjust_velocity(0, VELOCITY_CHANGE)
+
+            
         
         # Clear screen and draw background
         screen.fill(BLACK)
@@ -171,9 +161,27 @@ def main():
                 if len(particle.trail) > 1:
                     pygame.draw.lines(screen, RED, False, particle.trail, 2)
                 pygame.draw.circle(screen, RED, (int(particle.x), int(particle.y)), 5)
-        
-        # Draw velocity information
-        draw_velocity_info(screen, particle)
+                x=int(particle.x)
+                y=int(particle.y)
+                #displaying latitude
+                font = pygame.font.Font(None,25)
+                text=font.render(f'Y Position: {y}',True, WHITE, BLACK)
+                textRect=text.get_rect()
+                textRect.center=(100,700)
+                screen.blit(text,textRect)
+                text2=font.render(f'X position: {x}',True, WHITE, BLACK)
+                textRect2=text2.get_rect()
+                textRect2.center=(100,650)
+                screen.blit(text2,textRect2)
+                font = pygame.font.Font(None,25)
+                text3=font.render('Use arrows to change velocity',True, WHITE, BLACK)
+                textRect3=text3.get_rect()
+                textRect3.center=(150,750)
+                screen.blit(text3,textRect3)
+
+
+                pygame.display.update()
+            
         
         # Update display
         pygame.display.flip()
