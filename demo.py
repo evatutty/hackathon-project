@@ -172,13 +172,13 @@ def main():
                 y=int(particle.y)
                 #displaying latitude
                 font = pygame.font.Font(None,25)
-                text=font.render(f'Latitude: {y}',True, BLUE, RED)
+                text=font.render(f'Y Position: {y}',True, WHITE, BLACK)
                 textRect=text.get_rect()
-                textRect.center=(100,700)
+                textRect.center=(100,750)
                 screen.blit(text,textRect)
-                text2=font.render(f'Longitude: {x}',True, BLUE, RED)
+                text2=font.render(f'X position: {x}',True, WHITE, BLACK)
                 textRect2=text2.get_rect()
-                textRect2.center=(100,750)
+                textRect2.center=(100,700)
                 screen.blit(text2,textRect2)
 
                 pygame.display.update()
