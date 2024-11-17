@@ -23,7 +23,7 @@ GRAY = (128, 128, 128)
 
 # Set up display
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Southern Hemisphere Coriolis Effect Simulator")
+pygame.display.set_caption("Coriolis Effect Simulator")
 
 class Particle:
     def __init__(self, x, y):
@@ -112,7 +112,27 @@ def main():
                     pygame.draw.lines(screen, RED, False, particle.trail, 2)
                 # Draw particle
                 pygame.draw.circle(screen, RED, (int(particle.x), int(particle.y)), 5)
-        
+                x=int(particle.x)
+                y=int(particle.y)
+                #displaying latitude
+                font = pygame.font.Font(None,25)
+                text=font.render(f'Latitude: {y}',True, BLUE, RED)
+                textRect=text.get_rect()
+                textRect.center=(100,700)
+                screen.blit(text,textRect)
+                text2=font.render(f'Longitude: {x}',True, BLUE, RED)
+                textRect2=text2.get_rect()
+                textRect2.center=(100,750)
+                screen.blit(text2,textRect2)
+
+                pygame.display.update()
+
+
+    
+
+
+
+
         pygame.display.flip()
         clock.tick(60)
 
@@ -121,3 +141,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
