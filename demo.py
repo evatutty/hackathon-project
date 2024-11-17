@@ -171,27 +171,7 @@ def main():
                 if len(particle.trail) > 1:
                     pygame.draw.lines(screen, RED, False, particle.trail, 2)
                 pygame.draw.circle(screen, RED, (int(particle.x), int(particle.y)), 5)
-<<<<<<< HEAD
-                x = int(particle.x)
-                y = int(particle.y)
-                
-                # Displaying coordinates and instructions
-                font = pygame.font.Font(None, 25)
-                text = font.render(f'Y Position: {y}', True, WHITE, BLACK)
-                textRect = text.get_rect()
-                textRect.center = (100, 700)
-                screen.blit(text, textRect)
-                
-                text2 = font.render(f'X position: {x}', True, WHITE, BLACK)
-                textRect2 = text2.get_rect()
-                textRect2.center = (100, 650)
-                screen.blit(text2, textRect2)
-                
-                text3 = font.render('Use arrows to change velocity', True, WHITE, BLACK)
-                textRect3 = text3.get_rect()
-                textRect3.center = (150, 750)
-                screen.blit(text3, textRect3)
-=======
+
                 x=int(particle.x)
                 y=int(particle.y)
                 #displaying latitude
@@ -212,7 +192,7 @@ def main():
 
                 pygame.display.update()
             
->>>>>>> b15626cd68e3a66f713a1e5d9fa08f7f0023f7c9
+
         
         # Update display
         pygame.display.flip()
