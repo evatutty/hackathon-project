@@ -79,7 +79,7 @@ def create_stars(num_stars=200):
     stars = []
     for _ in range(num_stars):
         x = random.randint(0, 800)  # Random x position
-        y = random.randint(0, 600)  # Random y position
+        y = random.randint(0, 800)  # Random y position
         stars.append((x, y))  # Store the (x, y) coordinates of each star
     return stars
 
@@ -105,20 +105,25 @@ def draw_grid(surface, angle):
         end_y = CENTER[1] + RADIUS * math.sin(rot_angle)
         pygame.draw.line(surface, GRAY, CENTER, (end_x, end_y), 1)
   # Set up the fonts with different sizes
-    equator_font = pygame.font.Font(None, 50)  # Font size 74 for Equator
-    south_pole_font = pygame.font.Font(None, 20)  # Font size 48 for South Pole
+    equator_font = pygame.font.Font(None, 50)  # Font size for Equator
+    south_pole_font = pygame.font.Font(None, 20)  # Font size for South Pole
+    title_font = pygame.font.Font(None,80) #Font size for the title
 
 # Render the text for "Equator"
     equator_text = equator_font.render('Equator', True, (255, 0, 0))  # White text color
-    equator_rect = equator_text.get_rect(center=(600, 700))  # Position Equator text at (400, 200)
+    equator_rect = equator_text.get_rect(center=(600, 700))  
 
 # Render the text for "South Pole"
     south_pole_text = south_pole_font.render('South Pole', True, (255, 255, 255))  # White text color
-    south_pole_rect = south_pole_text.get_rect(center=(400, 390))  # Position South Pole text at (400, 400)
+    south_pole_rect = south_pole_text.get_rect(center=(400, 390))  
+
+    title_text = title_font.render('Southern Hemisphere', True, (200,40,10))
+    title_rect = title_text.get_rect(center=(400,50))
 
 # In your game loop or wherever appropriate, draw the texts
     screen.blit(equator_text, equator_rect)  # Draw Equator text
     screen.blit(south_pole_text, south_pole_rect)
+    screen.blit(title_text,title_rect)
 
 # In your game loop or wherever appropriate, draw the texts
     screen.blit(equator_text, equator_rect)  # Draw Equator text
