@@ -20,6 +20,8 @@ BLUE = (0, 0, 255)
 RED = (255, 0, 0)
 BLACK = (0, 0, 0)
 GRAY = (128, 128, 128)
+YELLOW = (255, 255, 0)  # For the equator
+POLE_COLOR = (255, 255, 255)  # White for the pole marker
 
 # Set up display
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -62,23 +64,76 @@ class Particle:
             return True
         return False
 
+def get_latitude_positions(num_lines=10):
+    """Calculate latitude line positions with perspective effect"""
+    positions = []
+    for i in range(num_lines):
+        # Use inverse cosine function to create perspective effect
+        angle = (i / (num_lines - 1)) * math.pi / 2
+        distance = RADIUS * math.sin(angle)
+        positions.append(int(distance))
+    return positions
+
+def create_stars(num_stars=200):
+    import random
+    stars = []
+    for _ in range(num_stars):
+        x = random.randint(0, 800)  # Random x position
+        y = random.randint(0, 600)  # Random y position
+        stars.append((x, y))  # Store the (x, y) coordinates of each star
+    return stars
+
+def draw_stars(screen, stars):
+    for (x, y) in stars:
+        pygame.draw.circle(screen, (255, 255, 255), (x, y), 2)
+
 def draw_grid(surface, angle):
-    # Draw latitude lines
-    for i in range(30, RADIUS, 60):
-        pygame.draw.circle(surface, GRAY, CENTER, i, 1)
+    # Draw latitude lines with perspective effect
+    latitude_positions = get_latitude_positions()
+    for radius in latitude_positions:
+        # Draw equator (first latitude line) thicker and in yellow
+        if radius == latitude_positions[0]:  # The equator is the outermost circle
+            pygame.draw.circle(surface, YELLOW, CENTER, radius, 100)  # Thicker line for equator
+        else:
+            pygame.draw.circle(surface, GRAY, CENTER, radius, 1)
     
-    # Draw longitude lines
-    for i in range(12):
-        rot_angle = math.radians(i * 30 + angle)
+    # Draw longitude lines with varying spacing
+    num_lines = 24  # Increase number of longitude lines
+    for i in range(num_lines):
+        rot_angle = math.radians(i * (360 / num_lines) + angle)
         end_x = CENTER[0] + RADIUS * math.cos(rot_angle)
         end_y = CENTER[1] + RADIUS * math.sin(rot_angle)
         pygame.draw.line(surface, GRAY, CENTER, (end_x, end_y), 1)
+  # Set up the fonts with different sizes
+    equator_font = pygame.font.Font(None, 50)  # Font size 74 for Equator
+    south_pole_font = pygame.font.Font(None, 20)  # Font size 48 for South Pole
+
+# Render the text for "Equator"
+    equator_text = equator_font.render('Equator', True, (255, 0, 0))  # White text color
+    equator_rect = equator_text.get_rect(center=(600, 700))  # Position Equator text at (400, 200)
+
+# Render the text for "South Pole"
+    south_pole_text = south_pole_font.render('South Pole', True, (255, 255, 255))  # White text color
+    south_pole_rect = south_pole_text.get_rect(center=(400, 390))  # Position South Pole text at (400, 400)
+
+# In your game loop or wherever appropriate, draw the texts
+    screen.blit(equator_text, equator_rect)  # Draw Equator text
+    screen.blit(south_pole_text, south_pole_rect)
+
+# In your game loop or wherever appropriate, draw the texts
+    screen.blit(equator_text, equator_rect)  # Draw Equator text
+    screen.blit(south_pole_text, south_pole_rect)  # Draw South Pole text)
+    # Draw South Pole marker
+    pygame.draw.circle(surface, POLE_COLOR, CENTER, 5)  # White dot for South Pole
+    # Add a small black outline to make the pole more visible
+    pygame.draw.circle(surface, BLACK, CENTER, 5, 1)
 
 def main():
     clock = pygame.time.Clock()
     rotation_angle = 0
     particle = None
     running = True
+    stars = create_stars(num_stars=200)
     
     while running:
         for event in pygame.event.get():
@@ -94,10 +149,11 @@ def main():
                     particle = Particle(x, y)
         
         screen.fill(BLACK)
-        
+        draw_stars(screen, stars)
         # Draw rotating Earth (Southern Hemisphere)
         pygame.draw.circle(screen, BLUE, CENTER, RADIUS)
         draw_grid(screen, rotation_angle)
+        
         
         # Update rotation
         rotation_angle += ROTATION_SPEED
